@@ -1,0 +1,224 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-router', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            config: {value: "", type: "openrouter-config"},
+            model: {value: "openai/gpt-4o-mini"},
+            temperature: {value: 0.1},
+            maxTokens: {value: 50},
+            topP: {value: 1},
+            routes: {value: []},
+            outputs: {value: 1}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-share-alt",
+        label: function() {
+            return this.name || "Router";
+        },
+        oneditprepare: function() {
+            var node = this;
+            var routesContainer = document.getElementById('routes-container');
+            
+            // Ensure routes is an array
+            var currentRoutes = [];
+            if (node.routes) {
+                if (typeof node.routes === 'string') {
+                    try {
+                        currentRoutes.push(node.routes);
+                    } catch(e) {
+                        //console.error('Failed to parse routes:', e);
+                        currentRoutes = [];
+                    }
+                } else if (Array.isArray(node.routes)) {
+                    currentRoutes = node.routes;
+                }
+            }
+            
+            var addRouteButton = document.createElement('button');
+            addRouteButton.innerHTML = '+ Add Route';
+            addRouteButton.className = 'red-ui-button';
+            addRouteButton.type = 'button';
+            addRouteButton.style.marginTop = '10px';
+            addRouteButton.onclick = function(e) {
+                e.preventDefault();
+                addRoute();
+                return false;
+            };
+            routesContainer.appendChild(addRouteButton);
+            
+            function addRoute(promptText) {
+                promptText = promptText || '';
+                var routeId = 'route-' + Date.now();
+                var routeDiv = document.createElement('div');
+                routeDiv.className = 'form-row route-row';
+                routeDiv.id = routeId;
+                routeDiv.style.marginBottom = '10px';
+                routeDiv.style.padding = '10px';
+                routeDiv.style.border = '1px solid #ddd';
+                routeDiv.style.borderRadius = '4px';
+                routeDiv.style.backgroundColor = '#f9f9f9';
+
+                var currentRouteCount = routesContainer.querySelectorAll('.route-row').length;
+                
+                var labelDiv = document.createElement('div');
+                labelDiv.style.marginBottom = '5px';
+                labelDiv.style.display = 'flex';
+                labelDiv.style.justifyContent = 'space-between';
+                labelDiv.style.alignItems = 'center';
+                
+                var label = document.createElement('strong');
+                label.innerHTML = 'Route ' + (currentRouteCount + 1);
+                
+                var removeButton = document.createElement('button');
+                removeButton.innerHTML = '✕ Remove';
+                removeButton.className = 'red-ui-button';
+                removeButton.type = 'button';
+                removeButton.style.padding = '2px 8px';
+                removeButton.style.fontSize = '12px';
+                removeButton.onclick = function(e) {
+                    e.preventDefault();
+                    routeDiv.remove();
+                    updateRouteLabels();
+                    saveRoutes();
+                    return false;
+                };
+
+                labelDiv.appendChild(label);
+                labelDiv.appendChild(removeButton);
+                
+                var textarea = document.createElement('textarea');
+                textarea.rows = 3;
+                textarea.style.width = '100%';
+                textarea.style.boxSizing = 'border-box';
+                textarea.placeholder = 'Describe this route (e.g., "Questions about weather")';
+                textarea.value = promptText;
+                textarea.onchange = function() {
+                    saveRoutes();
+                };
+                textarea.onkeyup = function() {
+                    saveRoutes();
+                };
+
+                routeDiv.appendChild(labelDiv);
+                routeDiv.appendChild(textarea);
+
+                routesContainer.insertBefore(routeDiv, addRouteButton);
+                saveRoutes();
+            }
+
+            function updateRouteLabels() {
+                var routeRows = routesContainer.querySelectorAll('.route-row');
+                routeRows.forEach(function(row, index) {
+                    var label = row.querySelector('strong');
+                    if (label) {
+                        label.innerHTML = 'Route ' + (index + 1);
+                    }
+                });
+            }
+
+            function saveRoutes() {
+                var routes = [];
+                var routeRows = routesContainer.querySelectorAll('.route-row');
+                routeRows.forEach(function(row) {
+                    var textarea = row.querySelector('textarea');
+                    if (textarea && textarea.value.trim()) {
+                        routes.push(textarea.value.trim());
+                    }
+                });
+                node.routes = routes;
+                node.outputs = Math.max(1, routes.length);
+            }
+
+            // Load existing routes
+            if (currentRoutes.length > 0) {
+                currentRoutes.forEach(function(prompt) {
+                    addRoute(prompt);
+                });
+            } else {
+                // Start with one empty route
+                addRoute("");
+            }
+        },
+        oneditsave: function() {
+            var routes = [];
+            var routesContainer = document.getElementById('routes-container');
+            if (routesContainer) {
+                var routeRows = routesContainer.querySelectorAll('.route-row');
+                routeRows.forEach(function(row) {
+                    var textarea = row.querySelector('textarea');
+                    if (textarea && textarea.value.trim()) {
+                        routes.push(textarea.value.trim());
+                    }
+                });
+            }
+            this.routes = routes;
+            this.outputs = Math.max(1, routes.length);
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-router">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
+        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
+    </div>
+    <div class="form-row">
+        <label for="node-input-temperature"><i class="fa fa-fire"></i> Temperature</label>
+        <input type="number" id="node-input-temperature" step="0.1" min="0" max="2">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxTokens"><i class="fa fa-expand"></i> Max Tokens</label>
+        <input type="number" id="node-input-maxTokens" min="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topP"><i class="fa fa-percentage"></i> Top P</label>
+        <input type="number" id="node-input-topP" step="0.1" min="0" max="1">
+    </div>
+    <div class="form-row">
+        <label style="width: 100%; display: block; margin-bottom: 10px;">
+            <i class="fa fa-road"></i> <strong>Routes</strong>
+            <span style="font-size: 11px; color: #666; font-weight: normal;">
+                (Each route becomes an output port)
+            </span>
+        </label>
+        <div id="routes-container" style="width: 100%;"></div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-router">
+    <p>This node routes incoming messages to dynamic outputs based on OpenRouter classification of msg.payload against defined route prompts.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> Select the OpenRouter config node.</li>
+        <li><strong>Model/Temperature/Max Tokens/Top P:</strong> Settings for the classification request.</li>
+        <li><strong>Routes:</strong> Add descriptions for each output route. The number of outputs matches the number of routes.</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code> should contain the text to classify.</p>
+    <h3>Output</h3>
+    <p>The message is sent to the output matching the best route. Additional properties added:</p>
+    <ul>
+        <li><code>msg.route</code> - The selected route index (0-based)</li>
+        <li><code>msg.routeNumber</code> - The route number (1-based)</li>
+        <li><code>msg.classification</code> - The raw classification response from the AI</li>
+        <li><code>msg.routeDescription</code> - The description of the selected route</li>
+    </ul>
+    <h3>Example Routes</h3>
+    <ul>
+        <li>Route 1: "Questions about weather and climate"</li>
+        <li>Route 2: "Math and calculation requests"</li>
+        <li>Route 3: "General conversation and greetings"</li>
+    </ul>
+    <p><strong>Note:</strong> After adding or removing routes, you must deploy the flow for the output ports to update.</p>
+</script>

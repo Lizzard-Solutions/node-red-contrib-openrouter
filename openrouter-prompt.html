@@ -1,0 +1,63 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-prompt', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            template: {value: ""}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-file-text",
+        label: function() {
+            return this.name || "OpenRouter Prompt";
+        },
+        oneditprepare: function() {
+            var node = this;
+            var templateEditor = RED.editor.createEditor('node-input-template', 'ace/mode/twig', {}, function() {
+                templateEditor.getSession().on('changeAnnotation', function() {
+                    // Optional: real-time preview
+                });
+            });
+            templateEditor.setValue(node.template || '');
+            templateEditor.getSession().on('change', function() {
+                node.template = templateEditor.getValue();
+            });
+        },
+        oneditsave: function() {
+            var templateEditor = RED.editor.getEditor('node-input-template');
+            this.template = templateEditor.getValue();
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-prompt">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-template"><i class="fa fa-edit"></i> Template</label>
+        <div class="form-field">
+            <textarea id="node-input-template" rows="5" placeholder="e.g., Hello {{user}}, your query is {{query}}"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-info-circle"></i> Usage</label>
+        <p style="font-size: 11px; color: #666;">Input msg.payload as object {user: 'value', query: 'text'}. Outputs formatted string.</p>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-prompt">
+    <p>This node formats a template string by replacing placeholders {{var}} with values from msg.payload object.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Template:</strong> Define prompt with placeholders like {{user}} or {{query}}.</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code> should be an object with keys matching placeholders.</p>
+    <h3>Output</h3>
+    <p><code>msg.payload</code> is the fully formatted string ready for OpenRouter calls.</p>
+    <h3>Example</h3>
+    <p>Template: "Greet {{user}} about {{topic}}."<br>Input: {user: 'Alice', topic: 'AI'}<br>Output: "Greet Alice about AI."</p>
+</script>

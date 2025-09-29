@@ -1,0 +1,51 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-cost-tracker', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            inputRate: {value: 0.01},
+            outputRate: {value: 0.03},
+            sessionKey: {value: "costs"}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-dollar-sign",
+        label: function() {
+            return this.name || "Cost Tracker";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-cost-tracker">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-inputRate"><i class="fa fa-arrow-down"></i> Input Rate ($/M tokens)</label>
+        <input type="number" id="node-input-inputRate" step="0.0001" min="0" placeholder="0.01">
+    </div>
+    <div class="form-row">
+        <label for="node-input-outputRate"><i class="fa fa-arrow-up"></i> Output Rate ($/M tokens)</label>
+        <input type="number" id="node-input-outputRate" step="0.0001" min="0" placeholder="0.03">
+    </div>
+    <div class="form-row">
+        <label for="node-input-sessionKey"><i class="fa fa-key"></i> Session Key</label>
+        <input type="text" id="node-input-sessionKey" placeholder="costs">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-cost-tracker">
+    <p>This node tracks and calculates costs from OpenRouter API usage.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Input Rate:</strong> Cost per million input tokens.</li>
+        <li><strong>Output Rate:</strong> Cost per million output tokens.</li>
+        <li><strong>Session Key:</strong> Flow context key for accumulating totals.</li>
+    </ul>
+    <h3>Input</h3>
+    <p>Expects <code>msg.response.usage</code> from upstream API node.</p>
+    <h3>Output</h3>
+    <p><code>msg.cost</code> = this call cost; <code>msg.costLog</code> = {sessionTotal, thisCall, usage}.</p>
+</script>

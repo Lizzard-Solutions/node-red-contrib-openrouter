@@ -1,0 +1,135 @@
+<!-- Defining the HTML structure for the Node-RED node configuration -->
+<style>
+.input-error {
+    border: 2px solid #ff0000 !important;
+}
+textarea {
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
+textarea:focus.input-error {
+    border-color: #ff0000 !important;
+}
+</style>
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-tools', {
+        category: 'OPENROUTER',
+        color: '#a6bbcf',
+        defaults: {
+            name: { value: '' },
+            config: { value: '', type: 'openrouter-config', required: true },
+            model: { value: 'openai/gpt-4o-mini' },
+            temperature: { value: 0.7, required: false },
+            maxTokens: { value: 1000, required: false },
+            topP: { value: 1, required: false },
+            tools: { value: '' },
+            toolChoice: { value: 'auto' }
+        },
+        inputs: 1,
+        outputs: 2,
+        icon: 'font-awesome/fa-comment',
+        label: function() {
+            return this.name || 'openrouter-tools';
+        },
+        oneditprepare: function() {
+            var $tools = $('#node-input-tools');
+            // Set initial value
+            $tools.val(this.tools || '');
+            // Set default height
+            $tools.css('height', '200px');
+            // Expand/collapse functionality
+            $('#expand-tools').click(function () {
+                var isExpanded = $tools.hasClass('expanded');
+                if (isExpanded) {
+                    $tools.css('height', '200px').removeClass('expanded');
+                    $(this).find('i').removeClass('fa-compress').addClass('fa-expand');
+                } else {
+                    $tools.css('height', '400px').addClass('expanded');
+                    $(this).find('i').removeClass('fa-expand').addClass('fa-compress');
+                }
+            });
+            // Simple JSON validation with error highlight
+            function validateToolsJson() {
+                var val = $tools.val().trim();
+                try {
+                    if (val === '') val = '[]';
+                    JSON.parse(val.replace(/\s+/g, ''));
+                    $tools.removeClass('input-error');
+                } catch (e) {
+                    $tools.addClass('input-error');
+                }
+            }
+            $tools.on('input', validateToolsJson);
+            validateToolsJson();
+        },
+        oneditsave: function() {
+            var $tools = $('#node-input-tools');
+            var val = $tools.val().trim();
+            try {
+                if (val === '') val = '[]';
+                this.tools = JSON.stringify(JSON.parse(val.replace(/\s+/g, '')));
+            } catch (e) {
+                this.tools = '[]';
+            }
+        }
+    });
+</script>
+
+<!-- Defining the UI form for the node configuration -->
+<script type="text/x-red" data-template-name="openrouter-tools">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-cog"></i> Config</label>
+        <input type="text" id="node-input-config" placeholder="OpenRouter Config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
+        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
+    </div>
+    <div class="form-row">
+        <label for="node-input-temperature"><i class="fa fa-thermometer-half"></i> Temperature</label>
+        <input type="number" id="node-input-temperature" step="0.1" min="0" max="2" placeholder="0.7">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxTokens"><i class="fa fa-calculator"></i> Max Tokens</label>
+        <input type="number" id="node-input-maxTokens" min="1" placeholder="1000">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topP"><i class="fa fa-percent"></i> Top P</label>
+        <input type="number" id="node-input-topP" step="0.1" min="0" max="1" placeholder="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-tools"><i class="fa fa-tools"></i> Tools (JSON)</label>
+        <textarea id="node-input-tools" placeholder='[{"type":"function","function":{"name":"example","description":"Example tool","parameters":{"type":"object","properties":{"param1":{"type":"string"}}}}}]'></textarea>
+        <button id="expand-tools" class="node-red-button" style="margin-left: 10px;" title="Toggle editor size"><i class="fa fa-expand"></i></button>
+    </div>
+    <div class="form-row">
+        <label for="node-input-toolChoice"><i class="fa fa-check-square"></i> Tool Choice</label>
+        <select id="node-input-toolChoice">
+            <option value="auto">Auto</option>
+            <option value="none">None</option>
+        </select>
+    </div>
+</script>
+
+<!-- Including Font Awesome for the expand/compress icon -->
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script type="text/html" data-help-name="openrouter-tools">
+    <p>This node performs a chat completion with tool calling using the OpenRouter API.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> Select the OpenRouter config node.</li>
+        <li><strong>Model:</strong> Specify the model ID that supports tools.</li>
+        <li><strong>Tools:</strong> JSON array of tools (OpenAI format). Use the expand icon to toggle editor size.</li>
+        <li><strong>Tool Choice:</strong> 'auto', 'none', or 'required'.</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code> or <code>msg.messages</code>. Override with <code>msg.tools</code>.</p>
+    <h3>Output</h3>
+    <p>If tool calls: <code>msg.toolCalls</code> array. Else <code>msg.payload</code> = content. Full <code>msg.response</code>.</p>
+</script>

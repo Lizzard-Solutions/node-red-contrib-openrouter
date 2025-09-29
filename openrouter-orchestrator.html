@@ -1,0 +1,127 @@
+<style>
+.input-error {
+    border: 2px solid #ff0000 !important;
+}
+textarea {
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
+textarea:focus.input-error {
+    border-color: #ff0000 !important;
+}
+</style>
+
+<script type="text/javascript">
+RED.nodes.registerType('openrouter-orchestrator', {
+    category: 'OpenRouter',
+    color: '#a6bbcf',
+    defaults: {
+        name: { value: "" },
+        config: { value: "", type: "openrouter-config" },
+        agents: { value: '[]' },
+        mode: { value: "sequential" }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "font-awesome/fa-sitemap",
+    label: function () {
+        return this.name || "Orchestrator";
+    },
+    oneditprepare: function () {
+        var a = $('#node-input-agents');
+        try {
+            var b = this.agents || '[]';
+            JSON.parse(b.replace(/\s+/g, ''));
+            a.val(b);
+        } catch (c) {
+            a.val('[]');
+        }
+        a.css('height', '200px');
+        $('#expand-tools').click(function () {
+            var d = a,
+                b = d.hasClass('expanded');
+            if (b) {
+                d.css('height', '200px').removeClass('expanded');
+                $(this).find('i').removeClass('fa-compress').addClass('fa-expand');
+            } else {
+                d.css('height', '400px').addClass('expanded');
+                $(this).find('i').removeClass('fa-expand').addClass('fa-compress');
+            }
+        });
+        function e() {
+            var f = a.val().trim();
+            try {
+                if (f === '') f = '[]';
+                JSON.parse(f.replace(/\s+/g, ''));
+                a.removeClass('input-error');
+               // RED.notify("JSON is valid.", "success", null, 2000);
+            } catch (g) {
+                a.addClass('input-error');
+              //  RED.notify("Invalid JSON: " + g.message, "error", null, 2000);
+            }
+        }
+        a.on('input', e);
+        e();
+    },
+    oneditsave: function () {
+        var a = $('#node-input-agents');
+        var b = a.val().trim();
+        try {
+            if (b === '') b = '[]';
+            this.agents = JSON.stringify(JSON.parse(b.replace(/\s+/g, '')));
+        } catch (c) {
+            this.agents = '[]';
+        }
+    }
+});
+</script>
+
+<script type="text/html" data-template-name="openrouter-orchestrator">
+    <div class="form-row">
+        <label for="node-input-name">
+            <i class="fa fa-tag"></i> Name
+        </label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config">
+            <i class="fa fa-server"></i> Server
+        </label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-agents">
+            <i class="fa fa-users"></i> Agents - JSON Input
+        </label>
+        <textarea id="node-input-agents" rows="10" placeholder='[{"type":"chat","model":"openai/gpt-4o-mini","prompt":"You are agent 1","temperature":0.7,"maxTokens":1000},{"type":"chat","model":"openai/gpt-4o-mini","prompt":"You are agent 2"}]'></textarea>
+        <button id="expand-tools" class="node-red-button" style="margin-left:10px;" title="Toggle editor size">
+            <i class="fa fa-expand"></i>
+        </button>
+    </div>
+    <div class="form-row">
+        <label for="node-input-mode">
+            <i class="fa fa-exchange"></i> Mode
+        </label>
+        <select id="node-input-mode">
+            <option value="sequential">Sequential</option>
+            <option value="parallel">Parallel</option>
+        </select>
+    </div>
+</script>
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script type="text/html" data-help-name="openrouter-orchestrator">
+    <p>This node orchestrates multiple AI agents using OpenRouter API.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> Select the OpenRouter config node.</li>
+        <li><strong>Agents:</strong> JSON array of agent configs (model, prompt, etc.). JSON validation is performed on input.</li>
+        <li><strong>Mode:</strong> Sequential (chain responses) or Parallel (independent).</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code> or <code>msg.messages</code> for initial input.</p>
+    <h3>Output</h3>
+    <p><code>msg.results</code> array of agent responses. Chained <code>msg.payload</code> for sequential.</p>
+</script>

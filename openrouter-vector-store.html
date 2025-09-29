@@ -1,0 +1,70 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-vector-store', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            config: {value: "", type: "openrouter-config"},
+            embeddingModel: {value: "openai/text-embedding-ada-002"},
+            threshold: {value: 0.8},
+            topK: {value: 5},
+            storeType: {value: "memory"}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-database",
+        label: function() {
+            return this.name || "Vector Store";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-vector-store">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-embeddingModel"><i class="fa fa-vector-square"></i> Embedding Model</label>
+        <input type="text" id="node-input-embeddingModel" placeholder="openai/text-embedding-ada-002">
+    </div>
+    <div class="form-row">
+        <label for="node-input-threshold"><i class="fa fa-percentage"></i> Similarity Threshold</label>
+        <input type="number" id="node-input-threshold" step="0.1" min="0" max="1" value="0.8">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topK"><i class="fa fa-list-ol"></i> Top K Results</label>
+        <input type="number" id="node-input-topK" min="1" value="5">
+    </div>
+    <div class="form-row">
+        <label for="node-input-storeType"><i class="fa fa-cog"></i> Store Type</label>
+        <select id="node-input-storeType">
+            <option value="memory">In-Memory</option>
+            <!-- External options stubbed -->
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-vector-store">
+    <p>This node provides a basic in-memory vector store using OpenRouter embeddings.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> OpenRouter config for API key.</li>
+        <li><strong>Embedding Model:</strong> Model for generating embeddings.</li>
+        <li><strong>Threshold:</strong> Min similarity score for retrieval (0-1).</li>
+        <li><strong>Top K:</strong> Max results to return.</li>
+        <li><strong>Store Type:</strong> Currently 'memory' only.</li>
+    </ul>
+    <h3>Input Actions (via msg.action)</h3>
+    <ul>
+        <li><strong>store:</strong> msg.payload = text to store; msg.metadata = optional object.</li>
+        <li><strong>retrieve/search:</strong> msg.payload/msg.query = query text.</li>
+        <li><strong>clear:</strong> Clears the store.</li>
+    </ul>
+    <h3>Output</h3>
+    <p><code>msg.results</code> = array of {id, text, metadata, score} for retrieve; <code>msg.stored</code> for store.</p>
+</script>

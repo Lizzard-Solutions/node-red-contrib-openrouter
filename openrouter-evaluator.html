@@ -1,0 +1,71 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-evaluator', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            config: {value: "", type: "openrouter-config"},
+            model: {value: "openai/gpt-4o-mini"},
+            temperature: {value: 0.1},
+            maxTokens: {value: 200},
+            criteria: {value: ""},
+            scaleType: {value: "numeric"}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-check-circle",
+        label: function() {
+            return this.name || "Evaluator";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-evaluator">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
+        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
+    </div>
+    <div class="form-row">
+        <label for="node-input-temperature"><i class="fa fa-fire"></i> Temperature</label>
+        <input type="number" id="node-input-temperature" step="0.1" min="0" max="2">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxTokens"><i class="fa fa-expand"></i> Max Tokens</label>
+        <input type="number" id="node-input-maxTokens" min="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-criteria"><i class="fa fa-tasks"></i> Criteria Prompt</label>
+        <textarea id="node-input-criteria" rows="4" placeholder="e.g., Evaluate the input on quality and relevance. Score from 0-10."></textarea>
+    </div>
+    <div class="form-row">
+        <label for="node-input-scaleType"><i class="fa fa-chart-bar"></i> Scale Type</label>
+        <select id="node-input-scaleType">
+            <option value="numeric">Numeric (0-10)</option>
+            <option value="binary">Binary (pass/fail)</option>
+            <option value="json">JSON</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-evaluator">
+    <p>This node evaluates input using OpenRouter API based on criteria.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> Select the OpenRouter config node.</li>
+        <li><strong>Model:</strong> Model for evaluation (low temp recommended).</li>
+        <li><strong>Criteria Prompt:</strong> System prompt for evaluation.</li>
+        <li><strong>Scale Type:</strong> How to parse output (numeric, binary, JSON).</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code> to evaluate.</p>
+    <h3>Output</h3>
+    <p><code>msg.score</code> (numeric), <code>msg.validated</code> (binary), <code>msg.evaluationResult</code> (JSON), <code>msg.evaluation</code> = raw text.</p>
+</script>

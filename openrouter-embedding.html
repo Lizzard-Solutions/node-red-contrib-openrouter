@@ -1,0 +1,71 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-embedding', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            config: {value: "", type: "openrouter-config"},
+            model: {value: "openai/text-embedding-ada-002"}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-calculator",
+        label: function() {
+            return this.name || "OpenRouter Embedding";
+        },
+        oneditprepare: function() {
+            var node = this;
+            // Model input
+            var modelInput = document.getElementById('node-input-model');
+            if (modelInput) {
+                modelInput.oninput = function() {
+                    node.model = this.value;
+                };
+            }
+        },
+        oneditsave: function() {
+            var modelInput = document.getElementById('node-input-model');
+            if (modelInput) {
+                this.model = modelInput.value;
+            }
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-embedding">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
+        <input type="text" id="node-input-model" placeholder="e.g., openai/text-embedding-ada-002" value="openai/text-embedding-ada-002">
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-info-circle"></i> Input</label>
+        <p style="font-size: 11px; color: #666;">msg.payload: string or array of strings. Outputs msg.embedding (single) or msg.embeddings (array).</p>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-embedding">
+    <p>This node generates embeddings for text using OpenRouter models.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> Select the OpenRouter config node.</li>
+        <li><strong>Model:</strong> Choose embedding model.</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code>: Text string or array of texts.</p>
+    <h3>Output</h3>
+    <ul>
+        <li><code>msg.embedding</code>: Vector for single input.</li>
+        <li><code>msg.embeddings</code>: Array of vectors for batch.</li>
+        <li><code>msg.usage</code>: Token usage.</li>
+    </ul>
+    <h3>Example</h3>
+    <p>Input: "Hello world"<br>Output: msg.embedding = [0.1, -0.2, ...]</p>
+</script>

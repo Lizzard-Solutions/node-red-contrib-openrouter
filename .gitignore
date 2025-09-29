@@ -1,0 +1,25 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Node-RED runtime files
+*.flows.json
+*.flows.json.backup
+*.flows_cred.json
+*.flows_cred.json.backup
+.red/
+.red* 
+*.backup
+
+# Environment files
+.env
+.env.*
+
+
+# VSCode settings
+.vscode/
+

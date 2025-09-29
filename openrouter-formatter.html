@@ -1,0 +1,52 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-formatter', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            formatType: {value: "raw"},
+            customTemplate: {value: ""}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-file-code",
+        label: function() {
+            return this.name || "Formatter";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-formatter">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-formatType"><i class="fa fa-paint-brush"></i> Format Type</label>
+        <select id="node-input-formatType">
+            <option value="raw">Raw</option>
+            <option value="json">JSON</option>
+            <option value="markdown">Markdown (HTML)</option>
+            <option value="yaml">YAML</option>
+            <option value="html">HTML Escaped</option>
+            <option value="custom">Custom Template</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-customTemplate"><i class="fa fa-code"></i> Custom Template</label>
+        <textarea id="node-input-customTemplate" rows="3" placeholder="&lt;div&gt;{{payload}}&lt;/div&gt;"></textarea>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-formatter">
+    <p>This node formats the output payload in various styles.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Format Type:</strong> Select output format; override with <code>msg.format</code>.</li>
+        <li><strong>Custom Template:</strong> Use {{payload}} placeholder for custom HTML/etc.</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.payload</code> to format.</p>
+    <h3>Output</h3>
+    <p><code>msg.formatted</code> = formatted content; original <code>msg.payload</code> preserved.</p>
+</script>

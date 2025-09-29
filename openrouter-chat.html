@@ -1,0 +1,64 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-chat', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            config: {value: "", type: "openrouter-config"},
+            model: {value: "openai/gpt-4o-mini"},
+            temperature: {value: 0.7},
+            maxTokens: {value: 1000},
+            topP: {value: 1}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-comments",
+        label: function() {
+            return this.name || "Chat";
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-chat">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
+        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
+    </div>
+    <div class="form-row">
+        <label for="node-input-temperature"><i class="fa fa-fire"></i> Temperature</label>
+        <input type="number" id="node-input-temperature" step="0.1" min="0" max="2">
+    </div>
+    <div class="form-row">
+        <label for="node-input-maxTokens"><i class="fa fa-expand"></i> Max Tokens</label>
+        <input type="number" id="node-input-maxTokens" min="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topP"><i class="fa fa-percentage"></i> Top P</label>
+        <input type="number" id="node-input-topP" step="0.1" min="0" max="1">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-chat">
+    <p>This node performs a chat completion using the OpenRouter API.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> Select the OpenRouter config node.</li>
+        <li><strong>Model:</strong> Specify the model ID (e.g., openai/gpt-4o-mini). Can be overridden by <code>msg.model</code>.</li>
+        <li><strong>Temperature:</strong> Controls creativity (0-2). Overridden by <code>msg.temperature</code>.</li>
+        <li><strong>Max Tokens:</strong> Limits response length. Overridden by <code>msg.maxTokens</code>.</li>
+        <li><strong>Top P:</strong> Nucleus sampling parameter (0-1). Overridden by <code>msg.topP</code>.</li>
+    </ul>
+    <h3>Input</h3>
+    <p>Set <code>msg.payload</code> to the prompt string, or <code>msg.messages</code> to an array of messages.</p>
+    <h3>Output</h3>
+    <p><code>msg.payload</code> contains the response text. Full response in <code>msg.response</code>.</p>
+    <p>Errors output on second port.</p>
+</script>

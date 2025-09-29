@@ -1,0 +1,119 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-memory', {
+        category: 'OpenRouter',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+            config: {value: "", type: "openrouter-config"},
+            bufferSize: {value: 10},
+            sessionKey: {value: "topic"},
+            enableSummarization: {value: false},
+            summaryModel: {value: "openai/gpt-4o-mini"}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-history",
+        label: function() {
+            return this.name || "OpenRouter Memory";
+        },
+        oneditprepare: function() {
+            var node = this;
+
+            // Session key input
+            var sessionKeyInput = document.getElementById('node-input-sessionKey');
+            if (sessionKeyInput) {
+                sessionKeyInput.oninput = function() {
+                    node.sessionKey = this.value;
+                };
+            }
+
+            // Buffer size
+            var bufferInput = document.getElementById('node-input-bufferSize');
+            if (bufferInput) {
+                bufferInput.onchange = function() {
+                    node.bufferSize = parseInt(this.value);
+                };
+            }
+
+            // Summarization toggle
+            var summToggle = document.getElementById('node-input-enableSummarization');
+            if (summToggle) {
+                summToggle.onchange = function() {
+                    node.enableSummarization = this.checked;
+                    // Toggle visibility of summary model
+                    var modelRow = document.getElementById('summary-model-row');
+                    if (modelRow) {
+                        modelRow.style.display = this.checked ? 'block' : 'none';
+                    }
+                };
+                // Initial toggle
+                var modelRow = document.getElementById('summary-model-row');
+                if (modelRow) {
+                    modelRow.style.display = node.enableSummarization ? 'block' : 'none';
+                }
+            }
+
+            // Summary model input
+            var modelInput = document.getElementById('node-input-summaryModel');
+            if (modelInput) {
+                modelInput.oninput = function() {
+                    node.summaryModel = this.value;
+                };
+            }
+        },
+        oneditsave: function() {
+            this.bufferSize = parseInt(document.getElementById('node-input-bufferSize').value);
+            this.sessionKey = document.getElementById('node-input-sessionKey').value;
+            this.enableSummarization = document.getElementById('node-input-enableSummarization').checked;
+            this.summaryModel = document.getElementById('node-input-summaryModel').value;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="openrouter-memory">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
+        <input type="text" id="node-input-config">
+    </div>
+<div class="form-row">
+        <label for="node-input-sessionKey"><i class="fa fa-key"></i> Session Key</label>
+        <input type="text" id="node-input-sessionKey" placeholder="e.g., topic or custom property" value="topic">
+    </div>
+    <div class="form-row">
+        <label for="node-input-bufferSize"><i class="fa fa-database"></i> Buffer Size</label>
+        <input type="number" id="node-input-bufferSize" min="1" max="100" value="10">
+    </div>
+    <div class="form-row">
+        <label for="node-input-enableSummarization"><i class="fa fa-compress"></i> Enable Summarization</label>
+        <input type="checkbox" id="node-input-enableSummarization">
+    </div>
+<div class="form-row" id="summary-model-row" style="display: none;">
+        <label for="node-input-summaryModel"><i class="fa fa-robot"></i> Summary Model</label>
+        <input type="text" id="node-input-summaryModel" placeholder="e.g., openai/gpt-4o-mini" value="openai/gpt-4o-mini">
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-info-circle"></i> Usage</label>
+        <p style="font-size: 11px; color: #666;">Input msg.messages array. Outputs with prepended history. Use before chat nodes.</p>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-memory">
+    <p>This node manages conversation history for OpenRouter chat sessions.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>Server:</strong> OpenRouter config for summarization.</li>
+        <li><strong>Session Key:</strong> Property to identify session (e.g., msg.topic).</li>
+        <li><strong>Buffer Size:</strong> Max messages to keep.</li>
+        <li><strong>Summarization:</strong> Summarize old messages when buffer full.</li>
+    </ul>
+    <h3>Input</h3>
+    <p><code>msg.messages</code>: Array of {role, content} objects.</p>
+    <h3>Output</h3>
+    <p><code>msg.messages</code>: Updated with history prepended. <code>msg.sessionKey</code>, <code>msg.historyLength</code>.</p>
+    <h3>Example</h3>
+    <p>Wire before openrouter-chat: Memory injects prior turns automatically.</p>
+</script>
