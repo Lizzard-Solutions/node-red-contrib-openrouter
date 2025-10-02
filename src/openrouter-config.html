@@ -1,0 +1,407 @@
+<script type="text/javascript">
+    RED.nodes.registerType('openrouter-config', {
+        category: 'config',
+        defaults: {
+            name: {value: ""},
+            model: {value: "", required: true}
+        },
+        credentials: {
+            apiKey: {type: "password", required: true},
+            siteUrl: {type: "text"},
+            siteName: {type: "text"}
+        },
+        label: function() {
+            var label = this.name || "OpenRouter Config";
+            if (this.model) {
+                label += ` (${this.model})`;
+            }
+            return label;
+        },
+        oneditprepare: function() {
+            var node = this;
+            node.models = [];
+            fetch('https://openrouter.ai/api/v1/models')
+                .then(response => response.json())
+                .then(data => {
+                    node.models = data.data || [];
+                    if (node.model) {
+                        console.log(node.models)
+                        $('#node-input-model-id').val(node.model);
+                        // Find matching model for display
+                        var match = node.models.find(m => m.id === node.model);
+                        if (match && match.name) {
+                            $('#model-name-display').text(` - ${match.name}`);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to fetch models:', err);
+                    node.warn('Could not load models list. Enter OpenRouter model ID manually.');
+                });
+
+            var input = $('#node-input-model-id');
+            var display = $('#model-name-display');
+            var dropdown = $('#model-dropdown');
+
+            input.on('input keyup', function(e) {
+                if (e.keyCode === 27) { // ESC
+                    dropdown.hide();
+                    return;
+                }
+                var term = input.val().toLowerCase().trim();
+                dropdown.empty().hide();
+                var matchesSource = node.models || [];
+                var matches = [];
+                if (term.length < 1) {
+                    matches = matchesSource.slice(0, 50);
+                } else {
+                    matches = matchesSource.filter(m => 
+                        (m.id && m.id.toLowerCase().includes(term)) || 
+                        (m.name && m.name.toLowerCase().includes(term))
+                    ).slice(0, 50);
+                }
+
+                matches.forEach(model => {
+                    var div = $('<div class="dropdown-item">')
+                        .html(`<div style="font-weight: bold; font-size: 14px;">${model.id}</div><div style="color: #666; font-size: 12px; margin-top: 2px;">${model.name || 'No name'}</div>`)
+                        .on('click', function() {
+                            node.model = model.id;
+                            input.val(model.id);
+                            display.text(model.name ? ` - ${model.name}` : '');
+                            dropdown.hide();
+                        });
+                    dropdown.append(div);
+                });
+
+                if (matches.length > 0) {
+                    dropdown.show();
+                }
+            });
+
+            // Allow manual entry: on blur, try to find matching model and set string
+            input.on('blur', function() {
+                var val = input.val().trim();
+                if (val && node.model !== val) {
+                    var match = node.models.find(m => m.id === val || (m.name && m.name.toLowerCase() === val.toLowerCase()));
+                    if (match) {
+                        node.model = match.id;
+                        display.text(match.name ? ` - ${match.name}` : '');
+                    } else {
+                        node.model = val;
+                        display.text('');
+                    }
+                }
+            });
+
+            // Hide dropdown when clicking outside
+            $(document).off('click.model-hide').on('click.model-hide', function(e) {
+                if (!input.is(e.target) && !input.parent().is(e.target) && dropdown.has(e.target).length === 0) {
+                    dropdown.hide();
+                }
+            });
+
+            // Show all on focus if empty
+            input.on('focus', function() {
+                if (input.val().trim() === '' && node.models.length > 0) {
+                    dropdown.empty();
+                    var initial = node.models.slice(0, 50);
+                    initial.forEach(function(model) {
+                        var div = $('<div class="dropdown-item">')
+                            .html(`<div style="font-weight: bold; font-size: 14px;">${model.id}</div><div style=\"color: #666; font-size: 12px; margin-top: 2px;\">${model.name || 'No name'}</div>`)
+                            .on('click', function() {
+                                node.model = model.id;
+                                input.val(model.id);
+                                display.text(model.name ? ` - ${model.name}` : '');
+                                dropdown.hide();
+                            });
+                        dropdown.append(div);
+                    });
+                    if (initial.length > 0) {
+                        dropdown.show();
+                    }
+                }
+            });
+
+            // Site selector logic
+            var siteSelector = $('#node-input-site-selector');
+            var editBtn = $('#edit-site-btn');
+            var customFields = $('#custom-site-fields');
+            var siteUrlInput = $('#node-config-input-siteUrl');
+            var siteNameInput = $('#node-config-input-siteName');
+
+            // Preload site values
+            var currentSiteUrl = node.credentials.siteUrl || '';
+            var currentSiteName = node.credentials.siteName || '';
+            if (currentSiteUrl === 'https://openrouter.ai' && currentSiteName === 'OpenRouter') {
+                siteSelector.val('default');
+                customFields.hide();
+            } else {
+                siteSelector.val('custom');
+                siteUrlInput.val(currentSiteUrl);
+                siteNameInput.val(currentSiteName);
+                customFields.show();
+            }
+
+            siteSelector.on('change', function() {
+                if (this.value === 'default') {
+                    siteUrlInput.val('https://openrouter.ai');
+                    siteNameInput.val('OpenRouter');
+                    customFields.hide();
+                    // Update credentials on change
+                    node.credentials.siteUrl = 'https://openrouter.ai';
+                    node.credentials.siteName = 'OpenRouter';
+                } else {
+                    customFields.show();
+                    // Keep current or empty
+                }
+            });
+
+            editBtn.on('click', function() {
+                siteSelector.val('custom');
+                customFields.show();
+                siteUrlInput.val(currentSiteUrl || 'https://yoursite.com');
+                siteNameInput.val(currentSiteName || 'Your Site');
+            });
+
+            // Update credentials on custom input change
+            siteUrlInput.on('change', function() {
+                node.credentials.siteUrl = this.value;
+            });
+            siteNameInput.on('change', function() {
+                node.credentials.siteName = this.value;
+            });
+
+            // Track API key focus/dirty state
+            var apiKeyInput = $('#node-config-input-apiKey');
+            var apiKeyDirty = false;
+            apiKeyInput.on('input change', function() { apiKeyDirty = true; $(this).data('dirty', true); });
+
+            // Validation on save
+            $('#node-input-save').on('click', function(event) {
+                var apiKeyVal = apiKeyInput.val() ? apiKeyInput.val().trim() : '';
+                var modelVal = $('#node-input-model-id').val().trim();
+                var isValid = true;
+                var apiKeyField = $('#node-config-input-apiKey');
+                var modelField = $('#node-input-model-id');
+                var apiMsg = $('#api-key-error');
+                var modelMsg = $('#model-error');
+                var errorMessages = [];
+
+                var hasExistingApiKey = !!(node.credentials && (node.credentials.has_apiKey === true));
+                var willProvideApiKey = !!apiKeyVal;
+
+                if (!hasExistingApiKey && !willProvideApiKey) {
+                    apiKeyField.addClass('error-field');
+                    if (!apiMsg.length) {
+                        apiKeyField.after('<div id="api-key-error" class="validation-message">API key is required.</div>');
+                    }
+                    apiMsg = $('#api-key-error');
+                    apiMsg.show();
+                    isValid = false;
+                    errorMessages.push('API key is required');
+                } else {
+                    apiKeyField.removeClass('error-field');
+                    if (apiMsg.length) apiMsg.hide();
+                }
+
+                if (!modelVal) {
+                    modelField.addClass('error-field');
+                    if (!modelMsg.length) {
+                        modelField.after('<div id="model-error" class="validation-message">Model must be selected.</div>');
+                    }
+                    modelMsg = $('#model-error');
+                    modelMsg.show();
+                    isValid = false;
+                    errorMessages.push('Model must be selected');
+                } else {
+                    modelField.removeClass('error-field');
+                    if (modelMsg.length) modelMsg.hide();
+                }
+
+                // Optional: validate token only if user actually changed it this edit session
+                // Note: remote token validation is handled at runtime; editor only checks presence
+
+                if (!isValid) {
+                    if (typeof RED !== 'undefined' && RED.notify) {
+                        RED.notify({
+                            type: 'error',
+                            text: 'Cannot save OpenRouter config: ' + errorMessages.join('; ')
+                        });
+                    }
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        },
+        oneditsave: function() {
+            var node = this;
+            // Mirror editor validation for safety; only validate token if changed during this edit
+            var apiKeyInput = $('#node-config-input-apiKey');
+            var apiKeyVal = apiKeyInput.val() ? apiKeyInput.val().trim() : '';
+            var apiKeyWasDirty = !!apiKeyInput.data('dirty');
+            var hasExistingApiKey = !!(node.credentials && (node.credentials.has_apiKey === true));
+            var willProvideApiKey = !!apiKeyVal;
+
+            if (!hasExistingApiKey && !willProvideApiKey) {
+                throw new Error('API key is required');
+            }
+
+            // Remote validation is performed by the runtime node during deploy
+
+            if (!this.model || (typeof this.model === 'string' && this.model.trim() === '')) {
+                throw new Error('Model must be selected');
+            }
+        }
+    });
+</script>
+
+<style>
+/* OpenRouter Config Node Styles */
+.model-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 3001;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.model-dropdown div {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.model-dropdown div:hover {
+    background-color: #f5f5f5;
+}
+
+.model-dropdown div:last-child {
+    border-bottom: none;
+}
+
+.site-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.site-selector select {
+    flex: 1;
+}
+
+.edit-btn {
+    padding: 4px 8px;
+    background: #ddd;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.edit-btn:hover {
+    background: #ccc;
+}
+
+.custom-fields {
+    margin-top: 5px;
+    display: none;
+    width: 100%;
+}
+
+.custom-fields input {
+    width: 100%;
+    margin-bottom: 5px;
+    box-sizing: border-box;
+}
+
+.model-input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.model-name-display {
+    color: #666;
+    font-style: italic;
+    margin-left: 8px;
+}
+
+.error-field {
+    border-color: #ff0000 !important;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+}
+
+.validation-message {
+    color: #ff0000;
+    font-size: 12px;
+    margin-top: 2px;
+    display: none;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .site-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .edit-btn {
+        align-self: flex-start;
+    }
+    
+    .model-input-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+</style>
+
+<script type="text/html" data-template-name="openrouter-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API Key <span style="color: red;">*</span></label>
+        <input type="password" id="node-config-input-apiKey" placeholder="Your OpenRouter API Key" class="form-control">
+    </div>
+    <div class="form-row site-selector">
+        <label><i class="fa fa-globe"></i> Site</label>
+        <select id="node-input-site-selector">
+            <option value="default">OpenRouter Default</option>
+            <option value="custom">Custom</option>
+        </select>
+        <button type="button" id="edit-site-btn" class="edit-btn">Edit</button>
+        <div id="custom-site-fields" class="custom-fields">
+            <input type="text" id="node-config-input-siteUrl" placeholder="Site URL (e.g., https://yoursite.com)">
+            <input type="text" id="node-config-input-siteName" placeholder="Site Name">
+        </div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-model-id"><i class="fa fa-robot"></i> Model <span style="color: red;">*</span></label>
+        <div class="model-input-container">
+            <input type="text" id="node-input-model-id" placeholder="Search or select model ID" class="form-control">
+            <span id="model-name-display" class="model-name-display"></span>
+            <div id="model-dropdown" class="model-dropdown"></div>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="openrouter-config">
+    <p>This node holds the configuration for the OpenRouter API, including the API key, model selection, and optional attribution details.</p>
+    <h3>Configuration</h3>
+    <ul>
+        <li><strong>API Key:</strong> Your OpenRouter API key (required)</li>
+        <li><strong>Model:</strong> Select or search for a model ID (saved as string; auto-selects on load if known).</li>
+        <li><strong>Site:</strong> Choose default OpenRouter or custom site for attribution (optional; edit button for custom).</li>
+    </ul>
+</script>

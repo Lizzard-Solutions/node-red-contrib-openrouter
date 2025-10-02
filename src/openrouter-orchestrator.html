@@ -55,10 +55,8 @@ RED.nodes.registerType('openrouter-orchestrator', {
                 if (f === '') f = '[]';
                 JSON.parse(f.replace(/\s+/g, ''));
                 a.removeClass('input-error');
-               // RED.notify("JSON is valid.", "success", null, 2000);
             } catch (g) {
                 a.addClass('input-error');
-              //  RED.notify("Invalid JSON: " + g.message, "error", null, 2000);
             }
         }
         a.on('input', e);
@@ -94,7 +92,7 @@ RED.nodes.registerType('openrouter-orchestrator', {
         <label for="node-input-agents">
             <i class="fa fa-users"></i> Agents - JSON Input
         </label>
-        <textarea id="node-input-agents" rows="10" placeholder='[{"type":"chat","model":"openai/gpt-4o-mini","prompt":"You are agent 1","temperature":0.7,"maxTokens":1000},{"type":"chat","model":"openai/gpt-4o-mini","prompt":"You are agent 2"}]'></textarea>
+        <textarea id="node-input-agents" rows="10" placeholder='[{"type":"chat","prompt":"You are agent 1","temperature":0.7,"maxTokens":1000},{"type":"chat","prompt":"You are agent 2"}]'></textarea>
         <button id="expand-tools" class="node-red-button" style="margin-left:10px;" title="Toggle editor size">
             <i class="fa fa-expand"></i>
         </button>
@@ -117,7 +115,7 @@ RED.nodes.registerType('openrouter-orchestrator', {
     <h3>Configuration</h3>
     <ul>
         <li><strong>Server:</strong> Select the OpenRouter config node.</li>
-        <li><strong>Agents:</strong> JSON array of agent configs (model, prompt, etc.). JSON validation is performed on input.</li>
+        <li><strong>Agents:</strong> JSON array of agent configs (prompt, etc.). JSON validation is performed on input.</li>
         <li><strong>Mode:</strong> Sequential (chain responses) or Parallel (independent).</li>
     </ul>
     <h3>Input</h3>

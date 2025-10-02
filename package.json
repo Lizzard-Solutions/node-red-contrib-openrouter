@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-openrouter",
   "description": "Node-RED nodes to interact with the OpenRouter API",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "keywords": [
     "node-red",
     "openrouter",
@@ -11,43 +11,44 @@
   ],
   "node-red": {
     "nodes": {
-      "openrouter-config": "openrouter-config.js",
-      "openrouter-chat": "openrouter-chat.js",
-      "openrouter-router": "openrouter-router.js",
-      "openrouter-prompt": "openrouter-prompt.js",
-      "openrouter-embedding": "openrouter-embedding.js",
-      "openrouter-memory": "openrouter-memory.js",
-      "openrouter-ranker": "openrouter-ranker.js",
-      "openrouter-tools": "openrouter-tools.js",
-      "openrouter-evaluator": "openrouter-evaluator.js",
-      "openrouter-orchestrator": "openrouter-orchestrator.js",
-      "openrouter-cost-tracker": "openrouter-cost-tracker.js",
-      "openrouter-formatter": "openrouter-formatter.js",
-      "openrouter-vector-store": "openrouter-vector-store.js"
+      "openrouter-config": "src/openrouter-config.js",
+      "openrouter-chat": "src/openrouter-chat.js",
+      "openrouter-router": "src/openrouter-router.js",
+      "openrouter-prompt": "src/openrouter-prompt.js",
+      "openrouter-embedding": "src/openrouter-embedding.js",
+      "openrouter-memory": "src/openrouter-memory.js",
+      "openrouter-ranker": "src/openrouter-ranker.js",
+      "openrouter-tools": "src/openrouter-tools.js",
+      "openrouter-evaluator": "src/openrouter-evaluator.js",
+      "openrouter-orchestrator": "src/openrouter-orchestrator.js",
+      "openrouter-cost-tracker": "src/openrouter-cost-tracker.js",
+      "openrouter-formatter": "src/openrouter-formatter.js",
+      "openrouter-vector-store": "src/openrouter-vector-store.js"
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nemanja/node-red-contrib-openrouter.git"
+    "url": "git+https://github.com/Lizzard-Solutions/node-red-contrib-openrouter.git"
   },
-  "author": "Nemanja",
+  "author": "Lizzard Solutions",
   "license": "MIT",
-  "main": "openrouter-chat.js",
+  "main": "src/openrouter-chat.js",
   "scripts": {
     "test": "mocha test/*.js"
   },
   "bugs": {
-    "url": "https://github.com/nemanja/node-red-contrib-openrouter/issues"
+    "url": "https://github.com/Lizzard-Solutions//node-red-contrib-openrouter/issues"
   },
-  "homepage": "https://github.com/nemanja/node-red-contrib-openrouter#readme",
+  "homepage": "hhttps://github.com/Lizzard-Solutions/node-red-contrib-openrouter#readme",
   "dependencies": {
     "axios": "^1.12.2",
     "js-yaml": "^4.1.0",
     "marked": "^16.3.0"
   },
   "devDependencies": {
-    "mocha": "^11.7.2",
-    "node-red": "^4.1.0",
+    "mocha": "^11.7.4",
+    "nock": "^14.0.10",
+    "node-red": "^4.0.9",
     "node-red-node-test-helper": "^0.3.5",
     "should": "^13.2.3"
   }

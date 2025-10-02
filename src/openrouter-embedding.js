@@ -10,9 +10,10 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
+        } else {
+            node.modelFromConfig = '';
         }
-
-        node.model = config.model || 'openai/text-embedding-ada-002';
 
         node.on('input', function(msg, send, done) {
             send = send || function() { node.send.apply(node, arguments); };
@@ -25,6 +26,13 @@ module.exports = function(RED) {
                     node.error(err, msg);
                 }
                 return send(null);
+            }
+
+            const model = node.modelFromConfig;
+            if (!model) {
+                const err = new Error('No model specified. Set a model in the shared config');
+                if (done) { done(err); } else { node.error(err, msg); }
+                return send(msg);
             }
 
             let inputText;
@@ -47,9 +55,10 @@ module.exports = function(RED) {
             }
 
             const data = {
-                model: node.model,
+                model: model,
                 input: inputText
             };
+            msg.model = model;
 
             const url = 'https://openrouter.ai/api/v1/embeddings';
             const headers = {
@@ -70,7 +79,7 @@ module.exports = function(RED) {
                             msg.embeddings = res.data.data.map(item => item.embedding);
                         } else {
                             msg.embedding = res.data.data[0].embedding;
-                            msg.embeddings = [msg.embedding]; // For consistency
+                            msg.embeddings = [msg.embedding];
                         }
                         msg.usage = res.data.usage;
                         send(msg);

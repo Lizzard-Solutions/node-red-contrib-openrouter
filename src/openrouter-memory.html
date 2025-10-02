@@ -7,8 +7,7 @@
             config: {value: "", type: "openrouter-config"},
             bufferSize: {value: 10},
             sessionKey: {value: "topic"},
-            enableSummarization: {value: false},
-            summaryModel: {value: "openai/gpt-4o-mini"}
+            enableSummarization: {value: false}
         },
         inputs: 1,
         outputs: 1,
@@ -40,24 +39,6 @@
             if (summToggle) {
                 summToggle.onchange = function() {
                     node.enableSummarization = this.checked;
-                    // Toggle visibility of summary model
-                    var modelRow = document.getElementById('summary-model-row');
-                    if (modelRow) {
-                        modelRow.style.display = this.checked ? 'block' : 'none';
-                    }
-                };
-                // Initial toggle
-                var modelRow = document.getElementById('summary-model-row');
-                if (modelRow) {
-                    modelRow.style.display = node.enableSummarization ? 'block' : 'none';
-                }
-            }
-
-            // Summary model input
-            var modelInput = document.getElementById('node-input-summaryModel');
-            if (modelInput) {
-                modelInput.oninput = function() {
-                    node.summaryModel = this.value;
                 };
             }
         },
@@ -65,7 +46,6 @@
             this.bufferSize = parseInt(document.getElementById('node-input-bufferSize').value);
             this.sessionKey = document.getElementById('node-input-sessionKey').value;
             this.enableSummarization = document.getElementById('node-input-enableSummarization').checked;
-            this.summaryModel = document.getElementById('node-input-summaryModel').value;
         }
     });
 </script>
@@ -90,10 +70,6 @@
     <div class="form-row">
         <label for="node-input-enableSummarization"><i class="fa fa-compress"></i> Enable Summarization</label>
         <input type="checkbox" id="node-input-enableSummarization">
-    </div>
-<div class="form-row" id="summary-model-row" style="display: none;">
-        <label for="node-input-summaryModel"><i class="fa fa-robot"></i> Summary Model</label>
-        <input type="text" id="node-input-summaryModel" placeholder="e.g., openai/gpt-4o-mini" value="openai/gpt-4o-mini">
     </div>
     <div class="form-row">
         <label><i class="fa fa-info-circle"></i> Usage</label>

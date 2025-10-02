@@ -10,12 +10,12 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
         }
 
         node.bufferSize = parseInt(config.bufferSize) || 10;
         node.sessionKey = config.sessionKey || 'default';
         node.enableSummarization = config.enableSummarization || false;
-        node.summaryModel = config.summaryModel || 'openai/gpt-4o-mini';
 
         // Storage for history: {sessionKey: [{role, content}, ...]}
         node.historyStore = node.context().get('history') || {};
@@ -39,7 +39,6 @@ module.exports = function(RED) {
             }
             let history = node.historyStore[currentSessionKey];
 
-            // Assume input has msg.messages as array of {role, content}
             if (!msg.messages || !Array.isArray(msg.messages)) {
                 msg.messages = [];
             }
@@ -50,6 +49,12 @@ module.exports = function(RED) {
             // Limit to buffer size
             if (history.length > node.bufferSize) {
                 if (node.enableSummarization) {
+                    const model = node.modelFromConfig;
+                    if (!model) {
+                        const err = new Error('No model specified. Set a model in the shared config');
+                        if (done) { done(err); } else { node.error(err, msg); }
+                        return send(msg);
+                    }
                     // Summarize oldest messages
                     let toSummarize = history.splice(0, history.length - node.bufferSize);
                     let summaryPrompt = `Summarize the following conversation history concisely:\n${toSummarize.map(m => `${m.role}: ${m.content}`).join('\n')}`;
@@ -59,7 +64,7 @@ module.exports = function(RED) {
                     ];
 
                     const data = {
-                        model: node.summaryModel,
+                        model: model,
                         messages: summaryMessages,
                         max_tokens: 150,
                         temperature: 0.3
@@ -110,8 +115,6 @@ module.exports = function(RED) {
         });
 
         function injectHistory(msg, history, sessionKey) {
-            // Prepend history to msg.messages, excluding the current ones if needed
-            // Assuming msg.messages are the new ones; history already includes them
             msg.messages = [...history.slice(0, -msg.messages.length), ...msg.messages];
             msg.sessionKey = sessionKey;
             msg.historyLength = history.length;

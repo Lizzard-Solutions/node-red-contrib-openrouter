@@ -10,6 +10,9 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
+        } else {
+            node.modelFromConfig = '';
         }
 
         // Parse routes from config
@@ -35,9 +38,6 @@ module.exports = function(RED) {
         if (node.outputs.length === 0) {
             node.warn('No routes defined');
         }
-        if (node.outputs.length === 0) {
-            node.warn('No routes defined');
-        }
 
         node.on('input', function(msg, send, done) {
             send = send || function() { node.send.apply(node, arguments); };
@@ -59,10 +59,19 @@ module.exports = function(RED) {
                 } else {
                     node.error(err, msg);
                 }
-                return send(msg); // Send to output 0 if no routes
+                return send(msg);
             }
 
-            let model = msg.model || config.model || 'openai/gpt-4o-mini';
+            let model = node.modelFromConfig;
+            if (!model) {
+                const err = new Error('No model specified. Set a model in the shared config');
+                if (done) {
+                    done(err);
+                } else {
+                    node.error(err, msg);
+                }
+                return send(msg);
+            }
             let temperature = msg.temperature !== undefined ? msg.temperature : (config.temperature !== undefined ? config.temperature : 0.1);
             let maxTokens = msg.maxTokens !== undefined ? msg.maxTokens : (config.maxTokens || 50);
             let topP = msg.topP !== undefined ? msg.topP : (config.topP !== undefined ? config.topP : 1);
@@ -124,7 +133,6 @@ User message: ${inputText}`;
                 .then((res) => {
                     if (res.status >= 200 && res.status < 300) {
                         let responseText = res.data.choices[0].message.content.trim();
-                        // Parse the number from response
                         let match = responseText.match(/(\d+)/);
                         let routeIndex = match ? parseInt(match[1]) - 1 : 0; // Default to 0
                         routeIndex = Math.max(0, Math.min(routeIndex, node.outputs.length - 1));
@@ -132,7 +140,6 @@ User message: ${inputText}`;
                         msg.route = routeIndex;
                         msg.classification = responseText;
 
-                        // Send to specific output
                         let outputs = new Array(node.outputs.length).fill(null);
                         outputs[routeIndex] = msg;
                         send(outputs);
@@ -145,7 +152,7 @@ User message: ${inputText}`;
                         } else {
                             node.error(err, msg);
                         }
-                        send(msg); // Fallback to output 0
+                        send(msg);
                         if (done) done();
                     }
                 })
@@ -165,7 +172,7 @@ User message: ${inputText}`;
                         data: e.response ? e.response.data : null
                     };
 
-                    send(msg); // Fallback
+                    send(msg);
                     if (done) {
                         done(e);
                     }

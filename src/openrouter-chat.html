@@ -5,7 +5,6 @@
         defaults: {
             name: {value: ""},
             config: {value: "", type: "openrouter-config"},
-            model: {value: "openai/gpt-4o-mini"},
             temperature: {value: 0.7},
             maxTokens: {value: 1000},
             topP: {value: 1}
@@ -29,10 +28,6 @@
         <input type="text" id="node-input-config">
     </div>
     <div class="form-row">
-        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
-        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
-    </div>
-    <div class="form-row">
         <label for="node-input-temperature"><i class="fa fa-fire"></i> Temperature</label>
         <input type="number" id="node-input-temperature" step="0.1" min="0" max="2">
     </div>
@@ -51,7 +46,6 @@
     <h3>Configuration</h3>
     <ul>
         <li><strong>Server:</strong> Select the OpenRouter config node.</li>
-        <li><strong>Model:</strong> Specify the model ID (e.g., openai/gpt-4o-mini). Can be overridden by <code>msg.model</code>.</li>
         <li><strong>Temperature:</strong> Controls creativity (0-2). Overridden by <code>msg.temperature</code>.</li>
         <li><strong>Max Tokens:</strong> Limits response length. Overridden by <code>msg.maxTokens</code>.</li>
         <li><strong>Top P:</strong> Nucleus sampling parameter (0-1). Overridden by <code>msg.topP</code>.</li>

@@ -4,30 +4,13 @@
         color: '#a6bbcf',
         defaults: {
             name: {value: ""},
-            config: {value: "", type: "openrouter-config"},
-            model: {value: "openai/text-embedding-ada-002"}
+            config: {value: "", type: "openrouter-config"}
         },
         inputs: 1,
         outputs: 1,
         icon: "font-awesome/fa-calculator",
         label: function() {
             return this.name || "OpenRouter Embedding";
-        },
-        oneditprepare: function() {
-            var node = this;
-            // Model input
-            var modelInput = document.getElementById('node-input-model');
-            if (modelInput) {
-                modelInput.oninput = function() {
-                    node.model = this.value;
-                };
-            }
-        },
-        oneditsave: function() {
-            var modelInput = document.getElementById('node-input-model');
-            if (modelInput) {
-                this.model = modelInput.value;
-            }
         }
     });
 </script>
@@ -42,10 +25,6 @@
         <input type="text" id="node-input-config">
     </div>
     <div class="form-row">
-        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
-        <input type="text" id="node-input-model" placeholder="e.g., openai/text-embedding-ada-002" value="openai/text-embedding-ada-002">
-    </div>
-    <div class="form-row">
         <label><i class="fa fa-info-circle"></i> Input</label>
         <p style="font-size: 11px; color: #666;">msg.payload: string or array of strings. Outputs msg.embedding (single) or msg.embeddings (array).</p>
     </div>
@@ -56,7 +35,6 @@
     <h3>Configuration</h3>
     <ul>
         <li><strong>Server:</strong> Select the OpenRouter config node.</li>
-        <li><strong>Model:</strong> Choose embedding model.</li>
     </ul>
     <h3>Input</h3>
     <p><code>msg.payload</code>: Text string or array of texts.</p>

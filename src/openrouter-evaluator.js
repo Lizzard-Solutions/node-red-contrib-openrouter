@@ -9,6 +9,9 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
+        } else {
+            node.modelFromConfig = '';
         }
         node.on('input', function(msg, send, done) {
             send = send || function() { node.send.apply(node, arguments); };
@@ -22,8 +25,13 @@ module.exports = function(RED) {
                 }
                 return send([null, msg]);
             }
-            let model = msg.model || config.model || 'openai/gpt-4o-mini';
-            let temperature = msg.temperature !== undefined ? msg.temperature : (config.temperature !== undefined ? config.temperature : 0.1); // Low temp for consistency
+            const model = node.modelFromConfig;
+            if (!model) {
+                const err = new Error('No model specified. Set a model in the shared config');
+                if (done) { done(err); } else { node.error(err, msg); }
+                return send([null, msg]);
+            }
+            let temperature = msg.temperature !== undefined ? msg.temperature : (config.temperature !== undefined ? config.temperature : 0.1);
             let maxTokens = msg.maxTokens !== undefined ? msg.maxTokens : (config.maxTokens || 200);
 
             temperature = parseFloat(temperature);
@@ -55,8 +63,6 @@ module.exports = function(RED) {
                 max_tokens: maxTokens
             };
 
-           
-
             const url = 'https://openrouter.ai/api/v1/chat/completions';
             const headers = {
                 'Authorization': `Bearer ${node.apiKey}`,
@@ -74,7 +80,6 @@ module.exports = function(RED) {
 
                         let score, validated;
                         if (scaleType === 'numeric') {
-                            // Extract score 0-10 with regex
                             const scoreMatch = responseText.match(/(\d+(?:\.\d+)?)/);
                             score = scoreMatch ? parseFloat(scoreMatch[1]) : null;
                             msg.score = score;

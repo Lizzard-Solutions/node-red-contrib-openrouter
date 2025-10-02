@@ -10,9 +10,11 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
+        } else {
+            node.modelFromConfig = '';
         }
 
-        node.model = config.model || 'openai/gpt-4o-mini';
         node.temperature = parseFloat(config.temperature) || 0.1;
 
         node.on('input', function(msg, send, done) {
@@ -28,6 +30,13 @@ module.exports = function(RED) {
                 return send(null);
             }
 
+            const model = node.modelFromConfig;
+            if (!model) {
+                const err = new Error('No model specified. Set a model in the shared config');
+                if (done) { done(err); } else { node.error(err, msg); }
+                return send(msg);
+            }
+
             if (!msg.candidates || !Array.isArray(msg.candidates) || msg.candidates.length === 0) {
                 const err = new Error('msg.candidates must be a non-empty array');
                 if (done) {
@@ -38,7 +47,6 @@ module.exports = function(RED) {
                 return send(msg);
             }
 
-            // Build candidates list
             let candidatesList = msg.candidates.map((cand, index) => `${index + 1}. ${cand.text || cand}`).join('\n');
             let systemPrompt = 'You are a response ranker. Rank the following candidate responses from best to worst (1 = best) based on relevance, coherence, and quality. Output ONLY a JSON object: {"ranked": [indices 1-based], "scores": [0-10 for each, best first]}';
 
@@ -49,8 +57,8 @@ module.exports = function(RED) {
                 { role: 'user', content: userPrompt }
             ];
 
-            const data = {
-                model: node.model,
+            const data ={
+                model: model,
                 messages: messages,
                 temperature: node.temperature,
                 max_tokens: 200
@@ -73,11 +81,9 @@ module.exports = function(RED) {
                     if (res.status >= 200 && res.status < 300 && res.data.choices && res.data.choices[0]) {
                         let responseText = res.data.choices[0].message.content.trim();
                         try {
-                            // Parse JSON from response
                             let parsed = JSON.parse(responseText);
-                            msg.ranked = parsed.ranked.map(value => value - 1) ||[];
+                            msg.ranked = (parsed.ranked || []).map(value => value - 1);
                             msg.scores = parsed.scores || [];
-                            // Top ranked: first in ranked, assuming 1-based indices
                             if (msg.ranked.length > 0 && msg.candidates[msg.ranked[0] ]) {
                                 msg.payload = msg.candidates[msg.ranked[0] ];
                                 msg.topScore = msg.scores[0] || 0;
@@ -85,9 +91,8 @@ module.exports = function(RED) {
                             msg.usage = res.data.usage;
                         } catch (parseErr) {
                             node.warn('Failed to parse ranking JSON: ' + parseErr.message + '. Raw: ' + responseText);
-                            // Fallback: use first candidate
                             msg.payload = msg.candidates[0];
-                            msg.scores = [5]; // Default
+                            msg.scores = [5];
                         }
                         send(msg);
                         if (done) done();

@@ -9,6 +9,7 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+	    node.model = server.model
         }
         node.on('input', function(msg, send, done) {
             send = send || function() { node.send.apply(node, arguments); };
@@ -22,7 +23,7 @@ module.exports = function(RED) {
                 }
                 return send([null, msg]);
             }
-            let model = msg.model || config.model || 'openai/gpt-4o-mini';
+            let model = node.model 
             let temperature = msg.temperature !== undefined ? msg.temperature : (config.temperature !== undefined ? config.temperature : 0.7);
             let maxTokens = msg.maxTokens !== undefined ? msg.maxTokens : (config.maxTokens || 1000);
             let topP = msg.topP !== undefined ? msg.topP : (config.topP !== undefined ? config.topP : 1);

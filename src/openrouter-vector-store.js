@@ -13,7 +13,7 @@ module.exports = function(RED) {
         }
 
         node.store = []; // In-memory: [{id, embedding: [], text, metadata}]
-        node.embeddingModel = config.embeddingModel || 'openai/text-embedding-ada-002';
+        node.embeddingModel = server.model;
         node.threshold = parseFloat(config.threshold) || 0.8;
         node.topK = parseInt(config.topK) || 5;
         node.storeType = config.storeType || 'memory';

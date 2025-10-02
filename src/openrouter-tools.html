@@ -14,12 +14,11 @@ textarea:focus.input-error {
 </style>
 <script type="text/javascript">
     RED.nodes.registerType('openrouter-tools', {
-        category: 'OPENROUTER',
-        color: '#a6bbcf',
+        category: 'OpenRouter',
+       color: '#a6bbcf',
         defaults: {
             name: { value: '' },
             config: { value: '', type: 'openrouter-config', required: true },
-            model: { value: 'openai/gpt-4o-mini' },
             temperature: { value: 0.7, required: false },
             maxTokens: { value: 1000, required: false },
             topP: { value: 1, required: false },
@@ -87,10 +86,6 @@ textarea:focus.input-error {
         <input type="text" id="node-input-config" placeholder="OpenRouter Config">
     </div>
     <div class="form-row">
-        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
-        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
-    </div>
-    <div class="form-row">
         <label for="node-input-temperature"><i class="fa fa-thermometer-half"></i> Temperature</label>
         <input type="number" id="node-input-temperature" step="0.1" min="0" max="2" placeholder="0.7">
     </div>
@@ -124,7 +119,6 @@ textarea:focus.input-error {
     <h3>Configuration</h3>
     <ul>
         <li><strong>Server:</strong> Select the OpenRouter config node.</li>
-        <li><strong>Model:</strong> Specify the model ID that supports tools.</li>
         <li><strong>Tools:</strong> JSON array of tools (OpenAI format). Use the expand icon to toggle editor size.</li>
         <li><strong>Tool Choice:</strong> 'auto', 'none', or 'required'.</li>
     </ul>

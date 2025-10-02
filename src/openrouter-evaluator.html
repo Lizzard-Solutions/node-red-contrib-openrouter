@@ -5,7 +5,6 @@
         defaults: {
             name: {value: ""},
             config: {value: "", type: "openrouter-config"},
-            model: {value: "openai/gpt-4o-mini"},
             temperature: {value: 0.1},
             maxTokens: {value: 200},
             criteria: {value: ""},
@@ -28,10 +27,6 @@
     <div class="form-row">
         <label for="node-input-config"><i class="fa fa-server"></i> Server</label>
         <input type="text" id="node-input-config">
-    </div>
-    <div class="form-row">
-        <label for="node-input-model"><i class="fa fa-robot"></i> Model</label>
-        <input type="text" id="node-input-model" placeholder="e.g., openai/gpt-4o-mini">
     </div>
     <div class="form-row">
         <label for="node-input-temperature"><i class="fa fa-fire"></i> Temperature</label>
@@ -60,7 +55,6 @@
     <h3>Configuration</h3>
     <ul>
         <li><strong>Server:</strong> Select the OpenRouter config node.</li>
-        <li><strong>Model:</strong> Model for evaluation (low temp recommended).</li>
         <li><strong>Criteria Prompt:</strong> System prompt for evaluation.</li>
         <li><strong>Scale Type:</strong> How to parse output (numeric, binary, JSON).</li>
     </ul>

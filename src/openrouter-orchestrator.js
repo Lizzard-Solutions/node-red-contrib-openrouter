@@ -9,9 +9,10 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
         }
 
-        // Parse agents config - expect JSON array like [{"type": "chat", "model": "model1", "prompt": "prompt1"}]
+        // Parse agents config - expect JSON array like [{"type": "chat", "prompt": "prompt1"}]
         let agents;
         try {
             agents = JSON.parse(config.agents || '[]');
@@ -34,16 +35,20 @@ module.exports = function(RED) {
                 return send([null, msg]);
             }
 
+            const model = node.modelFromConfig;
+            if (!model) {
+                const err = new Error('No model specified. Set a model in the shared config');
+                if (done) { done(err); } else { node.error(err, msg); }
+                return send([null, msg]);
+            }
+
             let currentMsg = RED.util.cloneMessage(msg); // Deep copy
-            console.log(currentMsg)
             const results = [];
 
             const processAgent = async (agent, index, currentMsg) => {
-                const model = agent.model || 'openai/gpt-4o-mini';
                 const temperature = agent.temperature !== undefined ? parseFloat(agent.temperature) : 0.7;
                 const maxTokens = agent.maxTokens !== undefined ? parseInt(agent.maxTokens) : 1000;
-                node.log(typeof currentMsg.payload)
-                node.log(typeof currentMsg)
+                
                 let messages = [];
                 if (Array.isArray(currentMsg.messages)) {
                     messages = currentMsg.messages.slice();
@@ -103,7 +108,6 @@ module.exports = function(RED) {
                     if (res.status >= 200 && res.status < 300) {
                         const content = res.data.choices[0].message.content;
                         results.push({ agent: index, response: content, full: res.data });
-                        // Chain: append to messages for next agent
                         messages.push({ role: 'assistant', content: content });
                         currentMsg.messages = messages;
                         currentMsg.payload = content;

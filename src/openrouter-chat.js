@@ -10,13 +10,11 @@ module.exports = function(RED) {
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
             node.modelFromConfig = server.model || '';
-        } else {
-            node.modelFromConfig = '';
-        }
+        } 
+
         node.on('input', function(msg, send, done) {
             send = send || function() { node.send.apply(node, arguments); };
-            
-            if (!server || !node.apiKey) {
+            if (!server || !node.apiKey || !server.model) {
                 const err = new Error('OpenRouter config not set');
                 if (done) {
                     done(err);
@@ -25,10 +23,8 @@ module.exports = function(RED) {
                 }
                 return send([null, msg]);
             }
-            let model = msg.model || config.model || node.modelFromConfig || 'openai/gpt-4o-mini';
-            if (!msg.model && !config.model && !node.modelFromConfig) {
-                node.warn('No model specified in msg, local config, or shared config; using default.');
-            }
+            let model =  node.modelFromConfig 
+          
             let temperature = msg.temperature !== undefined ? msg.temperature : (config.temperature !== undefined ? config.temperature : 0.7);
             let maxTokens = msg.maxTokens !== undefined ? msg.maxTokens : (config.maxTokens || 1000);
             let topP = msg.topP !== undefined ? msg.topP : (config.topP !== undefined ? config.topP : 1);
@@ -62,11 +58,6 @@ module.exports = function(RED) {
                 max_tokens: maxTokens,
                 top_p: topP
             };
-
-            // Log the request for debugging
-            node.log('Sending request to OpenRouter:');
-            node.log('Model: ' + model);
-            node.log('Messages: ' + JSON.stringify(messages));
 
             const url = 'https://openrouter.ai/api/v1/chat/completions';
             const headers = {
