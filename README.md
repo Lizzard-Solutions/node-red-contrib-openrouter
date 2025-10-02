@@ -76,12 +76,6 @@ If the model is not set in `openrouter-config`, runtime nodes will error with:
 - `openrouter-tools`: Misc utilities used by other nodes.
 - `openrouter-vector-store`: In-memory demo store with `store`, `retrieve`, and `clear` actions.
 
-## Example flow
-
-See `examples/example_flow.json` and import it via Node-RED:
-- Menu → Import → Clipboard → paste the JSON → Import
-- Update the `openrouter-config` node with your API key and desired model
-
 ## Breaking changes in this version
 - Removed per-node “Model” fields from all nodes. The shared `openrouter-config` node is now the only place to set the model.
 - Nodes validate at runtime and will error if the shared model is missing.
