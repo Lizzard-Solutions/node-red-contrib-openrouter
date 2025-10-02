@@ -9,6 +9,9 @@ module.exports = function(RED) {
             node.apiKey = server.credentials.apiKey;
             node.siteUrl = server.credentials.siteUrl || '';
             node.siteName = server.credentials.siteName || '';
+            node.modelFromConfig = server.model || '';
+        } else {
+            node.modelFromConfig = '';
         }
         node.on('input', function(msg, send, done) {
             send = send || function() { node.send.apply(node, arguments); };
@@ -22,7 +25,10 @@ module.exports = function(RED) {
                 }
                 return send([null, msg]);
             }
-            let model = msg.model || config.model || 'openai/gpt-4o-mini';
+            let model = msg.model || config.model || node.modelFromConfig || 'openai/gpt-4o-mini';
+            if (!msg.model && !config.model && !node.modelFromConfig) {
+                node.warn('No model specified in msg, local config, or shared config; using default.');
+            }
             let temperature = msg.temperature !== undefined ? msg.temperature : (config.temperature !== undefined ? config.temperature : 0.7);
             let maxTokens = msg.maxTokens !== undefined ? msg.maxTokens : (config.maxTokens || 1000);
             let topP = msg.topP !== undefined ? msg.topP : (config.topP !== undefined ? config.topP : 1);
@@ -81,6 +87,7 @@ module.exports = function(RED) {
                     if (res.status >= 200 && res.status < 300) {
                         msg.payload = res.data.choices[0].message.content;
                         msg.response = res.data;
+                        msg.model = model;
                         send([msg, null]);
                     } else {
                         const err = new Error(`HTTP ${res.status}: ${JSON.stringify(res.data)}`);

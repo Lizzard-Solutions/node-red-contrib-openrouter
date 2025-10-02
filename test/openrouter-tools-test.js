@@ -2,11 +2,7 @@ const helper = require('node-red-node-test-helper');
 const nodeUnderTest = require('../openrouter-tools.js');
 const axios = require('axios');
 
-helper.init(require('node-red'));
-
-jest.mock('axios');
-
-describe('OpenRouter Tools Node', function() {
+helper.init(require('node-red'));\n\ndescribe('OpenRouter Tools Node', function() {
     afterEach(function(done) {
         helper.unload();
         helper.init(require('node-red'));
@@ -15,28 +11,13 @@ describe('OpenRouter Tools Node', function() {
 
     it('should handle tool calls in response', function(done) {
         const flow = [
-            { id: 'config1', type: 'openrouter-config', apiKey: 'testkey' },
+            { id: 'config1', type: 'openrouter-config', credentials: { apiKey: 'testkey' } },
             { id: 'n1', type: 'openrouter-tools', config: 'config1', tools: '[]', wires: [['n2']] },
             { id: 'n2', type: 'helper' }
         ];
-        const mockResponse = {
-            status: 200,
-            data: {
-                choices: [{
-                    message: {
-                        tool_calls: [{
-                            id: 'call1',
-                            type: 'function',
-                            function: { name: 'test', arguments: '{"param":"value"}' }
-                        }],
-                        content: null
-                    }
-                }]
-            }
-        };
-        axios.post.mockResolvedValue(mockResponse);
+        const mockResponse = {\n            status: 200,\n            data: {\n                choices: [{\n                    message: {\n                        tool_calls: [{\n                            id: 'call1',\n                            type: 'function',\n                            function: { name: 'test', arguments: '{\"param\":\"value\"}' }\n                        }],\n                        content: null\n                    }\n                }]\n            }\n        };\n        // Simple mock for axios.post\n        const originalPost = axios.post;\n        axios.post = function() {\n            return Promise.resolve(mockResponse);\n        };
 
-        helper.load(nodeUnderTest, flow, function() {
+        // Restore axios after load if needed\n        helper.load(nodeUnderTest, flow, function() {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
             n2.on('input', function(msg) {
